@@ -11,3 +11,6 @@ Changes the current working directory to the home directory
 
 **3-listfiles**
 Lists all files in the directory in long format
+
+**4-listmorefiles**
+Lists all files in long format including hidden files
