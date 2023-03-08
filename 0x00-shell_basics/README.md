@@ -17,3 +17,6 @@ Lists all files in long format including hidden files
 
 **5-listfilesdigitonly**
 Displays  the current directory contents in long format, with user and group IDs displayed numerically, including hidden files
+
+**6-firstdirectory**
+Creates a directory in the /tmp directory
