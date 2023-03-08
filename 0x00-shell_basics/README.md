@@ -29,3 +29,6 @@ Deletes a file
 
 **9-firstdirdeletion**
 Deleting a directory
+
+**10-back**
+Script for changing directory to previous directory
