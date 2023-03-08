@@ -50,3 +50,6 @@ Moves all files beggining with an uppercase letter
 
 **101-clean_emacs**
 Deletes all files in current directory that end with an amberstand
+
+**102-tree**
+Creates 3 directories with one command
