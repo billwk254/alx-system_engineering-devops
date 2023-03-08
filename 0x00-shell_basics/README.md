@@ -14,3 +14,6 @@ Lists all files in the directory in long format
 
 **4-listmorefiles**
 Lists all files in long format including hidden files
+
+**5-listfilesdigitonly**
+Displays  the current directory contents in long format, with user and group IDs displayed numerically, including hidden files
