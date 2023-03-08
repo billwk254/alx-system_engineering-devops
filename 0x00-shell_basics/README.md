@@ -55,5 +55,5 @@ Deletes all files in current directory that end with an amberstand
 Creates 3 directories with one command
 
 **103-commas**
-
+List all files and directoriesof the current directory
 

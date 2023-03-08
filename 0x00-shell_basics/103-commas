@@ -1,2 +1,2 @@
 #!/bin/bash
-ls -1aFv --group-directories-first | sed -e 's/\(.*\)\/*$/\1\//' | paste -sd ","
+ls -amvp
