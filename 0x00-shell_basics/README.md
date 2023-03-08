@@ -38,3 +38,6 @@ Script for changing directory to previous directory
 
 **12-file_type**
 Prints the file type of a file
+
+**13-symbolic_link**
+Creates a symbolic link between files
