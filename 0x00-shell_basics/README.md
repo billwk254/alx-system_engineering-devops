@@ -26,3 +26,6 @@ Moves a file called betty from /tmp to /tmp/my_first_directory
 
 **8-firstdelete**
 Deletes a file
+
+**9-firstdirdeletion**
+Deleting a directory
