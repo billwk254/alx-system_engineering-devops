@@ -57,3 +57,5 @@ Creates 3 directories with one command
 **103-commas**
 List all files and directoriesof the current directory
 
+**0-iam_betty**
+Change the current user
