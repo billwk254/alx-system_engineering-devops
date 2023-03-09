@@ -1,2 +1,2 @@
 #!/bin/bash
-chmod 751 FILENAME && chown julien:julien FILENAME && touch -d "2022-09-20 14:25:00" FILE
+chmod 753 hello
