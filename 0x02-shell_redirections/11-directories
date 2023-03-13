@@ -1,0 +1,2 @@
+#!/bin/bash
+find . -type d -print|tail -n +3|wc -l
