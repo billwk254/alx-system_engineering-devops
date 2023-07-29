@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# This script kills the 7-highlander process.
+
+pkill -f "7-highlander"
+
+if [ $? -eq 0 ]; then
+    echo "Successfully killed 7-highlander process."
+else
+    echo "7-highlander process is not running."
+fi
