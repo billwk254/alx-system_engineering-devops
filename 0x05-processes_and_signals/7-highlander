@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# This script stops the 7-highlander process gracefully using SIGTERM signal.
+
+pkill -SIGTERM 7-highlander
+
+if [ $? -eq 0 ]; then
+    echo "Successfully stopped 7-highlander process."
+else
+    echo "7-highlander process is not running."
+fi
