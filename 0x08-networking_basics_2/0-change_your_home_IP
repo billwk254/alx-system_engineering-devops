@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# This script configures the Ubuntu server to change localhost resolution to 127.0.0.2 and facebook.com to 8.8.8.8.
+
+# Check if the script is run with sudo privileges
+if [[ $(id -u) -ne 0 ]]; then
+  echo "This script needs to be run with sudo privileges."
+  exit 1
+fi
+configure_hosts_file() {
+  cp /etc/hosts /etc/hosts.bak
+  sed -i 's/127.0.0.1[[:space:]]localhost/127.0.0.2 localhost/' /etc/hosts
+  sed -i 's/[[:space:]]facebook.com[[:space:]].*$/ 8.8.8.8 facebook.com/' /etc/hosts
+}
+configure_hosts_file
