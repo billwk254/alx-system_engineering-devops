@@ -1,46 +1,62 @@
 #!/usr/bin/env bash
-# This script installs and configures HAProxy on lb-01 server
+# Install and configure HAProxy for load balancing
 
-# Update the package list and install HAProxy
-sudo apt-get update
-sudo apt-get install -y haproxy
+# Colors for output
+blue='\e[1;34m'
+brown='\e[0;33m'
+green='\e[1;32m'
+reset='\033[0m'
 
-# Configure HAProxy for load balancing
-sudo cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.bak  # Backup the original configuration
+echo -e "${blue}Updating and performing minor checks...${reset}\n"
 
-cat <<EOL | sudo tee /etc/haproxy/haproxy.cfg
-global
-    log /dev/log local0
-    log /dev/log local1 notice
-    chroot /var/lib/haproxy
-    stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
-    stats timeout 30s
-    user haproxy
-    group haproxy
-    daemon
+function install_package() {
+    local package_name="$1"
+    if ! command -v "$package_name" &> /dev/null; then
+        echo -e "Installing: ${brown}$package_name${reset}\n"
+        sudo apt-get update -y -qq && \
+        sudo apt-get install -y "$package_name" -qq
+        echo -e "\n"
+    else
+        echo -e "${green}${package_name} is already installed.${reset}\n"
+    fi
+}
 
+# Install HAProxy
+install_package haproxy
+
+echo -e "\n${blue}Setting up HAProxy configurations.${reset}\n"
+
+# Backup the default HAProxy configuration
+sudo cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy_default.backup
+
+# Define HAProxy configuration
+haproxy_config="
 defaults
-    log global
     mode http
-    option httplog
-    option dontlognull
-    timeout connect 5000
-    timeout client 50000
-    timeout server 50000
+    timeout client 15s
+    timeout connect 10s
+    timeout server 15s
+    timeout http-request 10s
 
-frontend http_front
+frontend th3gr00t-tech-frontend
     bind *:80
-    stats uri /haproxy?stats
-    default_backend http_back
+    default_backend th3gr00t-tech-backend
 
-backend http_back
+backend th3gr00t-tech-backend
     balance roundrobin
-    server web-01 [STUDENT_ID]-web-01:80 check
-    server web-02 [STUDENT_ID]-web-02:80 check
-EOL
+    server 453-web-01 35.243.128.200:80 check
+    server 453-web-02 3.239.120.96:80 check
+"
 
-# Restart HAProxy service
-sudo systemctl restart haproxy
+# Apply the HAProxy configuration
+echo "$haproxy_config" | sudo dd status=none of=/etc/haproxy/haproxy.cfg
 
-# Enable HAProxy to start on boot
-sudo systemctl enable haproxy
+# Enable HAProxy to be started by init script
+echo "ENABLED=1" | sudo dd status=none of=/etc/default/haproxy
+
+# Check HAProxy status and start or restart it
+if systemctl is-active --quiet haproxy; then
+    sudo service haproxy restart
+else
+    sudo service haproxy start
+fi
