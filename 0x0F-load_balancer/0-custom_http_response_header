@@ -1,18 +1,95 @@
 #!/usr/bin/env bash
-# This script configures Nginx to include a custom HTTP response header
+# This script configures a web server with Nginx
 
-# Install Nginx if it's not already installed
-if ! [ -x "$(command -v nginx)" ]; then
-    sudo apt-get update
-    sudo apt-get install -y nginx
+# Uncomment to enable verbose mode
+# set -x
+
+# Colors for output
+blue='\e[1;34m'
+brown='\e[0;33m'
+green='\e[1;32m'
+reset='\033[0m'
+
+echo -e "${blue}Updating and performing minor checks...${reset}\n"
+
+function install() {
+    command -v "$1" &> /dev/null
+
+    # Check if the command is installed
+    if ! command -v "$1" &> /dev/null; then
+        echo -e "Installing: ${brown}$1${reset}\n"
+        sudo apt-get update -y -qq
+        sudo apt-get install -y "$1" -qq
+        echo -e "\n"
+    else
+        echo -e "${green}${1} is already installed.${reset}\n"
+    fi
+}
+
+# Install Nginx
+install nginx
+
+echo -e "\n${blue}Setting up some minor configurations.${reset}\n"
+
+# Allowing Nginx through the firewall
+sudo ufw allow 'Nginx HTTP'
+
+# Give ownership of website files to the user for easy editing
+web_root="/var/www/html"
+if [ -d "$web_root" ]; then
+    sudo chown -R "$USER":"$USER" "$web_root"
+    sudo chmod -R 755 "$web_root"
+else
+    sudo mkdir -p "$web_root"
+    sudo chown -R "$USER":"$USER" "$web_root"
+    sudo chmod -R 755 "$web_root"
 fi
 
-# Create a custom Nginx configuration file with the X-Served-By header
-echo "add_header X-Served-By $(hostname);" | sudo tee /etc/nginx/conf.d/99-custom-header.conf
+# Create directories if not present
+for dir in "$web_root" /var/www/error; do
+    if ! [ -d "$dir" ]; then
+        mkdir -p "$dir"
+    fi
+done
 
+# Create a new index file
+echo "Hello World!" > "$web_root/index.html"
 
-# Test Nginx configuration
-sudo nginx -t
+# Create a new error page
+echo "Ceci n'est pas une page" > "$web_root/error_404.html"
 
-# Reload Nginx to apply the new configuration
-sudo systemctl reload nginx
+# Backup default server config file
+sudo cp /etc/nginx/sites-enabled/default /etc/nginx/sites-enabled/nginx-sites-enabled_default.backup
+
+# Configure Nginx server block
+server_config=$(cat <<EOL
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    root $web_root;
+    index index.html index.htm index.nginx-debian.html;
+    server_name _;
+    add_header X-Served-By \$hostname;
+    location / {
+        try_files \$uri \$uri/ =404;
+    }
+    if (\$request_filename ~ redirect_me){
+        rewrite ^ https://th3-gr00t.tk/ permanent;
+    }
+    error_page 404 /error_404.html;
+    location = /error_404.html {
+        internal;
+    }
+}
+EOL
+)
+
+# Apply the server configuration
+echo "$server_config" | sudo dd status=none of=/etc/nginx/sites-enabled/default
+
+# Check Nginx status and start or restart it
+if systemctl is-active --quiet nginx; then
+    sudo systemctl restart nginx
+else
+    sudo systemctl start nginx
+fi
