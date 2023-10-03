@@ -26,6 +26,9 @@ backend http_back
     server web-02 18.209.224.170:80 check
 EOT
 
+# Check the HAProxy configuration
 sudo haproxy -c -f /etc/haproxy/haproxy.cfg
+
+# Start and enable HAProxy service
 sudo systemctl start haproxy
 sudo systemctl enable haproxy
