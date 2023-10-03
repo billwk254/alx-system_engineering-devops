@@ -1,0 +1,18 @@
+#!/bin/bash
+# Bash script to install and configure Nginx web server
+
+# Update package list and install Nginx
+apt-get -y update
+apt-get -y install nginx
+
+# Create a default Nginx configuration to return "Hello World!" on the root path
+echo "Hello World!" > /var/www/html/index.html
+
+# Ensure Nginx is running and listening on port 80
+service nginx start
+
+# Allow traffic on port 80 through the firewall
+ufw allow 'Nginx HTTP'
+
+# Display a message indicating successful installation
+echo "Nginx installed and configured. Web server is up and running."
