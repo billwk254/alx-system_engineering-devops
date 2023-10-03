@@ -1,11 +1,28 @@
 #!/usr/bin/env bash
-# This script creates an RSA key pair with a passphrase.
+# This script creates an RSA key pair with the given name, bits, and passphrase.
 
-# Specify the key name
+# Define the key name
 key_name="school"
 
-# Generate the RSA key pair with 4096 bits and the passphrase "betty"
-ssh-keygen -t rsa -b 4096 -f ~/.ssh/"$key_name" -N "betty"
+# Define the number of bits for the key
+key_bits=4096
 
-# Display a message indicating the key pair creation is successful
-echo "RSA key pair created with the name '$key_name' and passphrase 'betty'."
+# Define the passphrase
+passphrase="betty"
+
+# Check if the private key already exists
+if [[ -f ~/.ssh/"$key_name" ]]; then
+    echo "The private key '$key_name' already exists."
+    exit 1
+fi
+
+# Generate the RSA key pair with the specified bits and passphrase
+ssh-keygen -t rsa -b "$key_bits" -f ~/.ssh/"$key_name" -N "$passphrase"
+
+# Check if key generation was successful
+if [[ $? -eq 0 ]]; then
+    echo "RSA key pair created successfully."
+else
+    echo "Failed to create RSA key pair."
+    exit 1
+fi
