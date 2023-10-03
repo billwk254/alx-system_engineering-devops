@@ -1,95 +1,49 @@
 #!/usr/bin/env bash
-# This script configures a web server with Nginx
+# configure web-02 to be identical to web-01
+# The name of the custom HTTP header must be X-Served-By
+# The value of the custom HTTP header must be the hostname of the server Nginx is running on
 
-# Uncomment to enable verbose mode
-# set -x
-
-# Colors for output
-blue='\e[1;34m'
-brown='\e[0;33m'
-green='\e[1;32m'
-reset='\033[0m'
-
-echo -e "${blue}Updating and performing minor checks...${reset}\n"
-
-function install() {
-    command -v "$1" &> /dev/null
-
-    # Check if the command is installed
-    if ! command -v "$1" &> /dev/null; then
-        echo -e "Installing: ${brown}$1${reset}\n"
-        sudo apt-get update -y -qq
-        sudo apt-get install -y "$1" -qq
-        echo -e "\n"
-    else
-        echo -e "${green}${1} is already installed.${reset}\n"
-    fi
-}
+# Update package repositories
+sudo apt-get -y update
 
 # Install Nginx
-install nginx
+sudo apt-get -y install nginx
 
-echo -e "\n${blue}Setting up some minor configurations.${reset}\n"
-
-# Allowing Nginx through the firewall
+# Allow Nginx HTTP traffic
 sudo ufw allow 'Nginx HTTP'
 
-# Give ownership of website files to the user for easy editing
-web_root="/var/www/html"
-if [ -d "$web_root" ]; then
-    sudo chown -R "$USER":"$USER" "$web_root"
-    sudo chmod -R 755 "$web_root"
-else
-    sudo mkdir -p "$web_root"
-    sudo chown -R "$USER":"$USER" "$web_root"
-    sudo chmod -R 755 "$web_root"
-fi
+# Create necessary directories and set permissions
+sudo mkdir -p /var/www/html /var/www/error
+sudo chmod -R 755 /var/www
 
-# Create directories if not present
-for dir in "$web_root" /var/www/error; do
-    if ! [ -d "$dir" ]; then
-        mkdir -p "$dir"
-    fi
-done
+# Create index and 404 pages
+echo 'Hello World!' | sudo tee /var/www/html/index.html >/dev/null
+echo "Ceci n'est pas une page" | sudo tee /var/www/html/404.html >/dev/null
 
-# Create a new index file
-echo "Hello World!" > "$web_root/index.html"
-
-# Create a new error page
-echo "Ceci n'est pas une page" > "$web_root/error_404.html"
-
-# Backup default server config file
-sudo cp /etc/nginx/sites-enabled/default /etc/nginx/sites-enabled/nginx-sites-enabled_default.backup
-
-# Configure Nginx server block
-server_config=$(cat <<EOL
+# Configure Nginx with custom header
+server_config=$(cat <<EOF
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
-    root $web_root;
+    root /var/www/html;
     index index.html index.htm index.nginx-debian.html;
     server_name _;
     add_header X-Served-By \$hostname;
     location / {
         try_files \$uri \$uri/ =404;
     }
-    if (\$request_filename ~ redirect_me){
-        rewrite ^ https://th3-gr00t.tk/ permanent;
+    if (\$request_filename ~ redirect_me) {
+        rewrite ^ https://youtube.com permanent;
     }
-    error_page 404 /error_404.html;
-    location = /error_404.html {
+    error_page 404 /404.html;
+    location = /404.html {
         internal;
     }
 }
-EOL
+EOF
 )
 
-# Apply the server configuration
-echo "$server_config" | sudo dd status=none of=/etc/nginx/sites-enabled/default
+echo "$server_config" | sudo tee /etc/nginx/sites-enabled/default >/dev/null
 
-# Check Nginx status and start or restart it
-if systemctl is-active --quiet nginx; then
-    sudo systemctl restart nginx
-else
-    sudo systemctl start nginx
-fi
+# Restart Nginx service
+sudo service nginx restart
