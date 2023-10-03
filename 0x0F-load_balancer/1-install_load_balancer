@@ -1,62 +1,31 @@
 #!/usr/bin/env bash
 # Install and configure HAProxy for load balancing
 
-# Colors for output
-blue='\e[1;34m'
-brown='\e[0;33m'
-green='\e[1;32m'
-reset='\033[0m'
-
-echo -e "${blue}Updating and performing minor checks...${reset}\n"
-
-function install_package() {
-    local package_name="$1"
-    if ! command -v "$package_name" &> /dev/null; then
-        echo -e "Installing: ${brown}$package_name${reset}\n"
-        sudo apt-get update -y -qq && \
-        sudo apt-get install -y "$package_name" -qq
-        echo -e "\n"
-    else
-        echo -e "${green}${package_name} is already installed.${reset}\n"
-    fi
-}
+sudo apt-get update
 
 # Install HAProxy
-install_package haproxy
+sudo apt-get install haproxy -y
+sudo tee /etc/haproxy/haproxy.cfg > /dev/null <<EOT
+global
+    daemon
+    maxconn 256
 
-echo -e "\n${blue}Setting up HAProxy configurations.${reset}\n"
-
-# Backup the default HAProxy configuration
-sudo cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy_default.backup
-
-# Define HAProxy configuration
-haproxy_config="
 defaults
     mode http
-    timeout client 15s
-    timeout connect 10s
-    timeout server 15s
-    timeout http-request 10s
+    timeout connect 5000ms
+    timeout client 50000ms
+    timeout server 50000ms
 
-frontend th3gr00t-tech-frontend
+frontend http_front
     bind *:80
-    default_backend th3gr00t-tech-backend
+    default_backend http_back
 
-backend th3gr00t-tech-backend
+backend http_back
     balance roundrobin
-    server web-01 35.243.128.200:80 check
-    server web-02 3.239.120.96:80 check
-"
+    server web-01 100.26.225.174:80 check
+    server web-02 18.209.224.170:80 check
+EOT
 
-# Apply the HAProxy configuration
-echo "$haproxy_config" | sudo dd status=none of=/etc/haproxy/haproxy.cfg
-
-# Enable HAProxy to be started by init script
-echo "ENABLED=1" | sudo dd status=none of=/etc/default/haproxy
-
-# Check HAProxy status and start or restart it
-if systemctl is-active --quiet haproxy; then
-    sudo service haproxy restart
-else
-    sudo service haproxy start
-fi
+sudo haproxy -c -f /etc/haproxy/haproxy.cfg
+sudo systemctl start haproxy
+sudo systemctl enable haproxy
