@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 # Install and configure HAProxy for load balancing
 
-sudo apt-get update
-
-# Install HAProxy
-sudo apt-get install haproxy -y
+sudo apt-get -y update
+sudo apt-get -y install haproxy
 sudo tee /etc/haproxy/haproxy.cfg > /dev/null <<EOT
 global
     daemon
