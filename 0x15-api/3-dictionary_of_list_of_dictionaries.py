@@ -2,7 +2,18 @@
 
 
 """
-This script fetches data from an API, organizes it into a specific format, and saves it as a JSON file.
+Exports users' tasks to a JSON file in the format:
+{
+  "USER_ID": [
+    {
+      "task": "TASK_TITLE",
+      "completed": TASK_COMPLETED_STATUS,
+      "username": "USERNAME"
+    },
+    ...
+  ],
+  ...
+}
 """
 
 
@@ -11,43 +22,36 @@ import requests
 from sys import argv
 
 
-def fetch_and_organize_tasks():
-    """
-    Fetch data from the API, organize it into the required format, and save it as a JSON file.
-    """
-    if len(argv) == 1 or not argv[1].isdigit():
-        exit()
-
-    user_id = argv[1]
-
-    users_url = 'https://jsonplaceholder.typicode.com/users'
-    tasks_url = 'https://jsonplaceholder.typicode.com/todos'
-
-    users_response = requests.get(users_url)
-    tasks_response = requests.get(tasks_url)
-
-    if users_response.status_code != 200 or tasks_response.status_code != 200:
-        print("Error: Unable to fetch data from the API.")
-        exit()
-
-    users = users_response.json()
-    tasks = tasks_response.json()
-
-    user_tasks = {}
-    for user in users:
-        user_id = str(user['id'])
-        user_tasks[user_id] = []
-
-    for task in tasks:
-        task_data = {
-            "username": next(user['username'] for user in users if user['id'] == task['userId']),
-            "task": task['title'],
-            "completed": task['completed']
-        }
-        user_tasks[str(task['userId'])].append(task_data)
-
-    with open("todo_all_employees.json", "w") as json_file:
-        json.dump(user_tasks, json_file)
-
 if __name__ == "__main__":
-    fetch_and_organize_tasks()
+    if len(argv) != 2:
+        print("Usage: {} <employee_id>".format(argv[0]))
+    else:
+        employee_id = argv[1]
+        user_url = "https://jsonplaceholder.typicode.com/users/{}".format(employee_id)
+        todo_url = "https://jsonplaceholder.typicode.com/todos?userId={}".format(employee_id)
+
+        user_response = requests.get(user_url)
+        todo_response = requests.get(todo_url)
+
+        try:
+            user = user_response.json()
+            todos = todo_response.json()
+
+            username = user.get("username")
+            user_id = user.get("id")
+
+            task_list = [
+                {
+                    "task": task.get("title"),
+                    "completed": task.get("completed"),
+                    "username": username
+                }
+                for task in todos
+            ]
+
+            user_tasks = {str(user_id): task_list}
+
+            with open("{}.json".format(employee_id), 'w') as json_file:
+                json.dump(user_tasks, json_file)
+        except ValueError:
+            print("Not a valid JSON")
