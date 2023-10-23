@@ -2,56 +2,33 @@
 
 
 """
-Exports users' tasks to a JSON file in the format:
-{
-  "USER_ID": [
-    {
-      "task": "TASK_TITLE",
-      "completed": TASK_COMPLETED_STATUS,
-      "username": "USERNAME"
-    },
-    ...
-  ],
-  ...
-}
+Exports data in JSON format.
 """
 
 
 import json
 import requests
-from sys import argv
 
 
-if __name__ == "__main__":
-    if len(argv) != 2:
-        print("Usage: {} <employee_id>".format(argv[0]))
-    else:
-        employee_id = argv[1]
-        user_url = "https://jsonplaceholder.typicode.com/users/{}".format(employee_id)
-        todo_url = "https://jsonplaceholder.typicode.com/todos?userId={}".format(employee_id)
+if __name__ == "__main":
+    user_url = "https://jsonplaceholder.typicode.com/users/"
+    users = requests.get(user_url).json()
 
-        user_response = requests.get(user_url)
-        todo_response = requests.get(todo_url)
+    data = {}
 
-        try:
-            user = user_response.json()
-            todos = todo_response.json()
+    for user in users:
+        user_id = user.get("id")
+        todo_url = "https://jsonplaceholder.typicode.com/todos?userId={}".format(user_id)
+        todos = requests.get(todo_url).json()
 
-            username = user.get("username")
-            user_id = user.get("id")
+        tasks = []
+        for todo in todos:
+            tasks.append({
+                "task": todo.get("title"),
+                "completed": todo.get("completed"),
+                "username": user.get("username")
+            })
+        data[str(user_id)] = tasks
 
-            task_list = [
-                {
-                    "task": task.get("title"),
-                    "completed": task.get("completed"),
-                    "username": username
-                }
-                for task in todos
-            ]
-
-            user_tasks = {str(user_id): task_list}
-
-            with open("{}.json".format(employee_id), 'w') as json_file:
-                json.dump(user_tasks, json_file)
-        except ValueError:
-            print("Not a valid JSON")
+    with open('todo_all_employees.json', 'w') as json_file:
+        json.dump(data, json_file, sort_keys=True)
