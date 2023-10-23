@@ -1,42 +1,30 @@
 #!/usr/bin/python3
-
-
 """
-Script to fetch and export an employee's tasks to a CSV file using a REST API.
+Python script that exports user data in CSV format.
 """
 
-
-import requests
 import csv
+import requests
 import sys
 
+def export_user_data(user_id):
+    user_url = f"https://jsonplaceholder.typicode.com/users/{user_id}"
+    todos_url = f"https://jsonplaceholder.typicode.com/users/{user_id}/todos"
 
-def get_employee_todo_list(employee_id):
-    base_url = 'https://jsonplaceholder.typicode.com'
+    user_data = requests.get(user_url).json()
+    todos_data = requests.get(todos_url).json()
 
-    user_response = requests.get(f'{base_url}/users/{employee_id}')
-    user_data = user_response.json()
-    employee_id = user_data['id']
-    employee_name = user_data['username']
-
-    todos_response = requests.get(f'{base_url}/todos?userId={employee_id}')
-    todos_data = todos_response.json()
-
-    # Create a CSV file for the user
-    csv_filename = f'{employee_id}.csv'
-
-    with open(csv_filename, mode='w', newline='') as csv_file:
+    with open(f"{user_id}_todos.csv", mode="w", newline="") as csv_file:
         csv_writer = csv.writer(csv_file, quoting=csv.QUOTE_MINIMAL)
-        csv_writer.writerow(["USER_ID", "USERNAME", "TASK_COMPLETED_STATUS", "TASK_TITLE"])
+        csv_writer.writerow(["User ID", "Username", "Completed", "Title"])
 
-        for task in todos_data:
-            task_completed = "True" if task['completed'] else "False"
-            csv_writer.writerow([employee_id, employee_name, task_completed, task['title']])
+        for todo in todos_data:
+            csv_writer.writerow([user_id, user_data["username"], todo["completed"], todo["title"]])
 
-if __name__ == "__main__":
+if __name__ == "__main":
     if len(sys.argv) != 2:
-        print("Usage: python3 1-export_to_CSV.py <employee_id>")
+        print("Usage: python3 script.py <user_id>")
         sys.exit(1)
 
-    employee_id = int(sys.argv[1])
-    get_employee_todo_list(employee_id)
+    user_id = sys.argv[1]
+    export_user_data(user_id)
