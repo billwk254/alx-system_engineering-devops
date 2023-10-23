@@ -6,8 +6,8 @@ Script to fetch and export an employee's tasks to a JSON file using a REST API.
 """
 
 
-import requests
 import json
+import requests
 import sys
 
 
