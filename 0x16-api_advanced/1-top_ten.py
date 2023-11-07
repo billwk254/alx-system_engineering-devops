@@ -1,12 +1,17 @@
 #!/usr/bin/python3
+
+
 """
 1-top_ten
 """
+
+
 import requests
+
 
 def top_ten(subreddit):
     """
-    Queries the Reddit API and prints the titles of the first 10 hot posts for a given subreddit.
+    prints the titles of the first 10 hot posts for a given subreddit.
 
     Args:
         subreddit (str): The name of the subreddit to search.
@@ -34,6 +39,7 @@ def top_ten(subreddit):
                 print(f"{i + 1}. {post['data']['title']}")
     else:
         print("None")
+
 
 if __name__ == '__main':
     import sys
