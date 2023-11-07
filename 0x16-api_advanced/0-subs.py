@@ -15,7 +15,7 @@ def number_of_subscribers(subreddit):
         int: The number of subscribers for the subreddit, or 0 if the subreddit is invalid.
     """
     url = f"https://www.reddit.com/r/{subreddit}/about.json"
-    headers = {'User-Agent': 'MyBot/1.0 (by YourUsername)'}  # Set a custom User-Agent to avoid Too Many Requests error.
+    headers = {'User-Agent': 'AlxBot/1.0 (by wamboo_bazenga)'}
 
     response = requests.get(url, headers=headers)
 
